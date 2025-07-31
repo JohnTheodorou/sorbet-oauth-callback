@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorbet - OAuth Callback</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 90%;
+        }
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        h1 {
+            margin: 0 0 10px 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        p {
+            margin: 0 0 20px 0;
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+        .error {
+            background: rgba(255, 0, 0, 0.2);
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .success {
+            background: rgba(0, 255, 0, 0.2);
+            border: 1px solid rgba(0, 255, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="spinner"></div>
+        <h1>Processing Authorization</h1>
+        <p>Please wait while we complete your Revolut connection...</p>
+        <div id="status"></div>
+    </div>
+
+    <script>
+        (function() {
+            const statusDiv = document.getElementById('status');
+            
+            // Extract parameters from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            const state = urlParams.get('state');
+            const error = urlParams.get('error');
+            const errorDescription = urlParams.get('error_description');
+            
+            // Check for errors first
+            if (error) {
+                statusDiv.innerHTML = `
+                    <div class="error">
+                        <strong>Authorization Failed</strong><br>
+                        Error: ${error}<br>
+                        ${errorDescription ? `Description: ${errorDescription}` : ''}
+                    </div>
+                `;
+                return;
+            }
+            
+            // Check if we have the authorization code
+            if (code) {
+                statusDiv.innerHTML = `
+                    <div class="success">
+                        <strong>Authorization Successful!</strong><br>
+                        Redirecting to Sorbet...
+                    </div>
+                `;
+                
+                // Redirect back to your localhost app
+                const redirectUrl = `http://localhost:3000/eu_bank_connections/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state || '')}`;
+                
+                // Add a small delay to show the success message
+                setTimeout(() => {
+                    window.location.href = redirectUrl;
+                }, 1500);
+                
+            } else {
+                statusDiv.innerHTML = `
+                    <div class="error">
+                        <strong>No Authorization Code</strong><br>
+                        The authorization code was not found in the URL.
+                    </div>
+                `;
+            }
+        })();
+    </script>
+</body>
+</html> 
