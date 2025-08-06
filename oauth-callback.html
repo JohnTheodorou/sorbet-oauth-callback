@@ -106,7 +106,17 @@
                 `;
                 
                 // Redirect back to your localhost app
-                const redirectUrl = `http://localhost:3000/eu_bank_connections/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state || '')}`;
+                // Check if this is a payment flow or bank connection flow based on state parameter
+                const state = urlParams.get('state') || '';
+                let redirectUrl;
+                
+                if (state.includes('payment')) {
+                    // This is a payment authorization flow
+                    redirectUrl = `http://localhost:3000/payments/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`;
+                } else {
+                    // This is a bank connection flow
+                    redirectUrl = `http://localhost:3000/eu_bank_connections/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`;
+                }
                 
                 // Add a small delay to show the success message
                 setTimeout(() => {
