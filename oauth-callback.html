@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-  <html lang="en">
+<html lang="en">
   <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -74,16 +74,26 @@
               const error = urlParams.get('error');
               const errorDescription = urlParams.get('error_description');
 
-              // Determine bank from state parameter
+              // Determine bank from state parameter or referrer
               let bankName = 'Bank';
+              let bankParam = 'revolut'; // Default
+
               if (state.includes('boc')) {
                   bankName = 'Bank of Cyprus';
+                  bankParam = 'boc';
               } else if (state.includes('nbog')) {
                   bankName = 'National Bank of Greece';
+                  bankParam = 'nbog';
               } else if (state.includes('coop')) {
                   bankName = 'Coop Pank';
+                  bankParam = 'coop';
               } else if (state.includes('revolut') || state.includes('bank_connection')) {
                   bankName = 'Revolut';
+                  bankParam = 'revolut';
+              } else if (document.referrer.includes('bankofcyprus.com')) {
+                  // If no state but came from BoC, assume it's BoC
+                  bankName = 'Bank of Cyprus';
+                  bankParam = 'boc';
               }
 
               // Update the message based on the bank
@@ -119,7 +129,7 @@
                   </div>
               `;
 
-              // Determine redirect URL based on state parameter
+              // Determine redirect URL
               let redirectUrl;
 
               if (state.includes('payment')) {
@@ -127,9 +137,10 @@
                   redirectUrl = `http://localhost:3000/payments/callback?code=${encodeURIComponen
   t(code)}&state=${encodeURIComponent(state)}`;
               } else {
-                  // Bank connection flow (includes BoC, NBOG, Coop, Revolut)
+                  // Bank connection flow - add bank parameter to help identification
+                  const stateParam = state || `bank_connection_${bankParam}`;
                   redirectUrl = `http://localhost:3000/eu_bank_connections/callback?code=${encode
-  URIComponent(code)}&state=${encodeURIComponent(state)}`;
+  URIComponent(code)}&state=${encodeURIComponent(stateParam)}&bank=${bankParam}`;
               }
 
               console.log('Redirecting to:', redirectUrl);
@@ -142,4 +153,4 @@
           })();
       </script>
   </body>
-  </html>
+</html>
