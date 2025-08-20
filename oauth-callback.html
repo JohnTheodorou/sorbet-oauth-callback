@@ -175,7 +175,7 @@
                   redirectUrl = `http://localhost:3000/payments/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`;
               } else {
                   // Bank connection flow - add bank parameter to help identification
-                  const stateParam = state || `bank_connection_${bankParam}`;
+                  const stateParam = state || ('bank_connection_' + bankParam);
                   redirectUrl = `http://localhost:3000/eu_bank_connections/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(stateParam)}&bank=${bankParam}`;
               }
 
