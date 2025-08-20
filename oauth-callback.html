@@ -53,6 +53,14 @@
               border-radius: 10px;
               margin-top: 10px;
           }
+          .debug {
+              background: rgba(108, 117, 125, 0.8);
+              padding: 10px;
+              border-radius: 5px;
+              margin-top: 10px;
+              font-size: 12px;
+              text-align: left;
+          }
       </style>
   </head>
   <body>
@@ -61,18 +69,40 @@
           <h1>Processing Authorization</h1>
           <p id="bank-message">Please wait while we complete your connection...</p>
           <div id="status"></div>
+          <div id="debug"></div>
       </div>
 
       <script>
           (function() {
               const statusDiv = document.getElementById('status');
               const bankMessage = document.getElementById('bank-message');
+              const debugDiv = document.getElementById('debug');
 
               const urlParams = new URLSearchParams(window.location.search);
               const code = urlParams.get('code');
               const state = urlParams.get('state') || '';
               const error = urlParams.get('error');
               const errorDescription = urlParams.get('error_description');
+
+              // Debug logging
+              console.log('OAuth Callback Debug:');
+              console.log('URL:', window.location.href);
+              console.log('Code:', code);
+              console.log('State:', state);
+              console.log('Error:', error);
+              console.log('Error Description:', errorDescription);
+              console.log('Referrer:', document.referrer);
+
+              // Debug display
+              debugDiv.innerHTML = `
+                  <div class="debug">
+                      <strong>Debug Info:</strong><br>
+                      Code: ${code ? 'Present' : 'Missing'}<br>
+                      State: "${state}"<br>
+                      Error: ${error || 'None'}<br>
+                      Referrer: ${document.referrer}<br>
+                  </div>
+              `;
 
               // Determine bank from state parameter or referrer
               let bankName = 'Bank';
@@ -90,15 +120,23 @@
               } else if (state.includes('revolut') || state.includes('bank_connection')) {
                   bankName = 'Revolut';
                   bankParam = 'revolut';
-              } else if (document.referrer.includes('bankofcyprus.com')) {
-                  // If no state but came from BoC, assume it's BoC
+              } else if (document.referrer.includes('bankofcyprus.com') || 
+                         document.referrer.includes('sandbox-apis.bankofcyprus.com')) {
+                  // Enhanced BoC detection
                   bankName = 'Bank of Cyprus';
                   bankParam = 'boc';
+              } else if (document.referrer.includes('nbg.gr')) {
+                  bankName = 'National Bank of Greece';
+                  bankParam = 'nbog';
+              } else if (document.referrer.includes('cooppank.ee')) {
+                  bankName = 'Coop Pank';
+                  bankParam = 'coop';
               }
 
+              console.log('Detected bank:', bankParam, '(' + bankName + ')');
+
               // Update the message based on the bank
-              bankMessage.textContent = `Please wait while we complete your ${bankName} 
-  connection...`;
+              bankMessage.textContent = `Please wait while we complete your ${bankName} connection...`;
 
               if (error) {
                   statusDiv.innerHTML = `
@@ -134,13 +172,11 @@
 
               if (state.includes('payment')) {
                   // Payment flow
-                  redirectUrl = `http://localhost:3000/payments/callback?code=${encodeURIComponen
-  t(code)}&state=${encodeURIComponent(state)}`;
+                  redirectUrl = `http://localhost:3000/payments/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`;
               } else {
                   // Bank connection flow - add bank parameter to help identification
                   const stateParam = state || `bank_connection_${bankParam}`;
-                  redirectUrl = `http://localhost:3000/eu_bank_connections/callback?code=${encode
-  URIComponent(code)}&state=${encodeURIComponent(stateParam)}&bank=${bankParam}`;
+                  redirectUrl = `http://localhost:3000/eu_bank_connections/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(stateParam)}&bank=${bankParam}`;
               }
 
               console.log('Redirecting to:', redirectUrl);
