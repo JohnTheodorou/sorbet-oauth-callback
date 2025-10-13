@@ -172,11 +172,11 @@
 
               if (state.includes('payment')) {
                   // Payment flow
-                  redirectUrl = `http://localhost:3000/payments/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`;
+                  redirectUrl = `http://localhost:8443/payments/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`;
               } else {
                   // Bank connection flow - add bank parameter to help identification
                   const stateParam = state || ('bank_connection_' + bankParam);
-                  redirectUrl = `http://localhost:3000/eu_bank_connections/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(stateParam)}&bank=${bankParam}`;
+                  redirectUrl = `http://localhost:8443/eu_bank_connections/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(stateParam)}&bank=${bankParam}`;
               }
 
               console.log('Redirecting to:', redirectUrl);
