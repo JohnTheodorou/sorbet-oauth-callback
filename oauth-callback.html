@@ -170,14 +170,32 @@
               // Determine redirect URL
               let redirectUrl;
 
-              if (state.includes('payment')) {
-                  // Payment flow
-                  redirectUrl = `https://localhost:8443/payments/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`;
+              // SECURITY: Use the backend to determine the flow type from the cryptographic state token
+              // The state token is cryptographically signed and stored in the database with flow metadata
+              // We send ALL callbacks to a unified endpoint that will route based on the validated state
+
+              // For now, we need to determine if this is a payment or bank connection flow
+              // Since the state token is cryptographic (doesn't contain flow info), we have two options:
+              // 1. Always route to /payments/callback and let it handle both (requires backend update)
+              // 2. Make the frontend smarter by checking additional context
+
+              // Check if this is a payment flow by examining the state parameter in localStorage
+              // or by checking if we came from a payment initiation page
+              const isPaymentFlow = sessionStorage.getItem('oauth_flow_type') === 'payment' ||
+                                    state.includes('payment') || // Legacy state tokens
+                                    state.includes('pis_'); // Payment Initiation Service flows
+
+              if (isPaymentFlow) {
+                  // Payment flow (PIS - Payment Initiation Service)
+                  redirectUrl = `https://localhost:8443/payments/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}&bank=${bankParam}`;
               } else {
-                  // Bank connection flow - add bank parameter to help identification
+                  // Bank connection flow (AIS - Account Information Service)
                   const stateParam = state || ('bank_connection_' + bankParam);
                   redirectUrl = `https://localhost:8443/eu_bank_connections/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(stateParam)}&bank=${bankParam}`;
               }
+
+              // Clear the flow type from sessionStorage
+              sessionStorage.removeItem('oauth_flow_type');
 
               console.log('Redirecting to:', redirectUrl);
 
